@@ -29,13 +29,13 @@ public class GraphicsDisplay extends JPanel
     {
         setBackground(Color.WHITE);
     // Перо для рисования графика
-        graphicsStroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_ROUND, 10.0f, null, 0.0f);
+        graphicsStroke = new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_ROUND, 10.0f, new float[] {30, 10, 20, 10, 10, 10, 20, 10}, 0.0f);
     // Перо для рисования осей координат
-        axisStroke = new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
+        axisStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
     // Перо для рисования контуров маркеров
-        markerStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+        markerStroke = new BasicStroke(3.0f, BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
     // Шрифт для подписей осей координат
         axisFont = new Font("Serif", Font.BOLD, 36);
@@ -62,11 +62,7 @@ public class GraphicsDisplay extends JPanel
     }
     // Метод отображения всего компонента, содержащего график
     public void paintComponent(Graphics g)
-    {
-        /* Шаг 1 - Вызвать метод предка для заливки области цветом заднего фона
-         * Эта функциональность - единственное, что осталось в наследство от
-         * paintComponent класса JPanel
-         */
+    {// Шаг 1 - Вызвать метод предка для заливки области цветом заднего фона
         super.paintComponent(g);
     // Шаг 2 - Если данные графика не загружены (при показе компонента при запуске программы) - ничего не делать
         if (graphicsData==null || graphicsData.length==0) return;
@@ -75,7 +71,6 @@ public class GraphicsDisplay extends JPanel
         maxX = graphicsData[graphicsData.length-1][0];
         minY = graphicsData[0][1];
         maxY = minY;
-    // Найти минимальное и максимальное значение функции
         for (int i = 1; i<graphicsData.length; i++)
         {
             if (graphicsData[i][1]<minY)
@@ -87,8 +82,7 @@ public class GraphicsDisplay extends JPanel
                 maxY = graphicsData[i][1];
             }
         }
-    // Шаг 4 - Определить (исходя из размеров окна) масштабы по осям X и Y - сколько пикселов
-    //приходится на единицу длины по X и по Y
+    // Шаг 4 - Определить (исходя из размеров окна) масштабы по осям X и Y - сколько пикселов приходится на единицу длины по X и по Y
         double scaleX = getSize().getWidth() / (maxX - minX);
         double scaleY = getSize().getHeight() / (maxY - minY);
     // Шаг 5 - Чтобы изображение было неискажѐнным - масштаб должен быть одинаков
@@ -139,7 +133,7 @@ public class GraphicsDisplay extends JPanel
     {
     // Выбрать линию для рисования графика
         canvas.setStroke(graphicsStroke);
-        canvas.setColor(Color.RED);
+        canvas.setColor(Color.PINK);
 /* Будем рисовать линию графика как путь, состоящий из множества сегментов (GeneralPath)
 * Начало пути устанавливается в первую точку графика, после чего прямой соединяется со
 * следующими точками
@@ -162,29 +156,21 @@ public class GraphicsDisplay extends JPanel
     // Отобразить график
         canvas.draw(graphics);
     }
-    // Отображение маркеров точек, по которым рисовался график
+
     protected void paintMarkers(Graphics2D canvas)
     {
-    // Шаг 1 - Установить специальное перо для черчения контуров маркеров
         canvas.setStroke(markerStroke);
-        canvas.setColor(Color.RED);
-    // Выбрать красный цвет для закрашивания маркеров внутри
-        canvas.setPaint(Color.RED);
-    // Шаг 2 - Организовать цикл по всем точкам графика
+        canvas.setColor(Color.BLACK);
         for (Double[] point: graphicsData)
         {
-    // Инициализировать эллипс как объект для представления маркера
-            Ellipse2D.Double marker = new Ellipse2D.Double();
-/* Эллипс будет задаваться посредством указания координат его центра
-и угла прямоугольника, в который он вписан */
-    // Центр - в точке (x,y)
+            GeneralPath path = new GeneralPath();
             Point2D.Double center = xyToPoint(point[0], point[1]);
-    // Угол прямоугольника - отстоит на расстоянии (3,3)
-            Point2D.Double corner = shiftPoint(center, 3, 3);
-    // Задать эллипс по центру и диагонали
-            marker.setFrameFromCenter(center, corner);
-            canvas.draw(marker); // Начертить контур маркера
-            canvas.fill(marker); // Залить внутреннюю область маркера
+            path.moveTo(center.x, center.y + 5);
+            path.lineTo(center.x + 5, center.y);
+            path.lineTo(center.x, center.y-5);
+            path.lineTo(center.x - 5, center.y);
+            path.lineTo(center.x, center.y + 5);
+            canvas.draw(path);
         }
     }
     // Метод, обеспечивающий отображение осей координат
@@ -194,15 +180,12 @@ public class GraphicsDisplay extends JPanel
         canvas.setStroke(axisStroke);
         canvas.setColor(Color.BLACK);
         canvas.setPaint(Color.BLACK);
-    // Подписи к координатным осям делаются специальным шрифтом
         canvas.setFont(axisFont);
     // Создать объект контекста отображения текста - для получения характеристик устройства (экрана)
         FontRenderContext context = canvas.getFontRenderContext();
     // Определить, должна ли быть видна ось Y на графике
         if (minX<=0.0 && maxX>=0.0)
         {
-    // Она должна быть видна, если левая граница показываемой области (minX) <= 0.0, а правая (maxX) >= 0.0
-    // Сама ось - это линия между точками (0, maxY) и (0, minY)
             canvas.draw(new Line2D.Double(xyToPoint(0, maxY), xyToPoint(0, minY)));
     // Стрелка оси Y
             GeneralPath arrow = new GeneralPath();
@@ -227,7 +210,6 @@ public class GraphicsDisplay extends JPanel
 
         if (minY<=0.0 && maxY>=0.0)
         {
-    // Она должна быть видна, если верхняя граница показываемой области (maxX) >= 0.0, а нижняя (minY) <= 0.0
             canvas.draw(new Line2D.Double(xyToPoint(minX, 0), xyToPoint(maxX, 0)));
             GeneralPath arrow = new GeneralPath();
             Point2D.Double lineEnd = xyToPoint(maxX, 0);

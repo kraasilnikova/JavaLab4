@@ -8,8 +8,8 @@ import javax.swing.event.*;
 
 public class MainFrame extends JFrame
 {
-    private static final int WIDTH = 800;
-    private static final int HEIGHT = 600;
+    private static final int WIDTH = 40;
+    private static final int HEIGHT = 480;
     // Объект диалогового окна для выбора файлов
     private JFileChooser fileChooser = null;
     private JCheckBoxMenuItem showAxisMenuItem;
@@ -44,7 +44,7 @@ public class MainFrame extends JFrame
                 openGraphics(fileChooser.getSelectedFile());
         }
     };
-fileMenu.add(openGraphicsAction);
+    fileMenu.add(openGraphicsAction);
 
     JMenu graphicsMenu = new JMenu("График");
     menuBar.add(graphicsMenu);
