@@ -3,6 +3,8 @@ package bsu.rfe.java.group9.lab4.Krasilnikova.varB12;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import javax.swing.JPanel;
 
 public class GraphicsDisplay extends JPanel
@@ -29,16 +31,16 @@ public class GraphicsDisplay extends JPanel
     {
         setBackground(Color.WHITE);
     // Перо для рисования графика
-        graphicsStroke = new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
+        graphicsStroke = new BasicStroke(5.0f, BasicStroke.CAP_SQUARE,
                 BasicStroke.JOIN_ROUND, 10.0f, new float[] {30, 10, 20, 10, 10, 10, 20, 10}, 0.0f);
     // Перо для рисования осей координат
         axisStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
                 BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
     // Перо для рисования контуров маркеров
         markerStroke = new BasicStroke(3.0f, BasicStroke.CAP_BUTT,
-                BasicStroke.JOIN_MITER, 10.0f, null, 0.0f);
+                BasicStroke.JOIN_MITER, 45.0f, null, 0.0f);
     // Шрифт для подписей осей координат
-        axisFont = new Font("Serif", Font.BOLD, 36);
+        axisFont = new Font("Serif", Font.BOLD, 15);
     }
 
     // Данный метод вызывается из обработчика элемента меню "Открыть файл с графиком"
@@ -175,21 +177,35 @@ public class GraphicsDisplay extends JPanel
     {
         canvas.setStroke(markerStroke);
         canvas.setColor(Color.BLACK);
-        for (Double[] point: graphicsData)
+        for (int i = 0; i < graphicsData.length; i++)
         {
-            if (markPoint(point[1]))
-                canvas.setColor(Color.BLACK);
-            else
+            Boolean flag = true;
+            if (i != 0 &&  i != graphicsData.length - 1 &&((graphicsData[i-1][1] < graphicsData[i][1] && graphicsData[i][1] > graphicsData[i+1][1]) || (graphicsData[i-1][1] > graphicsData[i][1] && graphicsData[i][1] < graphicsData[i+1][1])))
+            {
+                canvas.setColor(Color.RED);
+                flag = false;
+            }
+            else if (markPoint(graphicsData[i][1]))
                 canvas.setColor(Color.BLUE);
+            else
+                canvas.setColor(Color.BLACK);
 
             GeneralPath path = new GeneralPath();
-            Point2D.Double center = xyToPoint(point[0], point[1]);
+            Point2D.Double center = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
             path.moveTo(center.x, center.y + 5);
             path.lineTo(center.x + 5, center.y);
-            path.lineTo(center.x, center.y-5);
+            path.lineTo(center.x, center.y - 5);
             path.lineTo(center.x - 5, center.y);
             path.lineTo(center.x, center.y + 5);
             canvas.draw(path);
+            if (flag == false)
+            {
+                FontRenderContext context = canvas.getFontRenderContext();
+                Rectangle2D bounds = axisFont.getStringBounds("Экстремум", context);
+                Point2D.Double labelPos = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
+                canvas.drawString("Экстремум", (float) labelPos.getX() + 5, (float) (labelPos.getY() - bounds.getY()));
+                canvas.drawString("("+graphicsData[i][0]+"; "+graphicsData[i][1]+")", (float) labelPos.getX() + 5, (float) (labelPos.getY() - bounds.getY()) - 20);
+            }
         }
     }
     // Метод, обеспечивающий отображение осей координат
@@ -202,28 +218,19 @@ public class GraphicsDisplay extends JPanel
         canvas.setFont(axisFont);
     // Создать объект контекста отображения текста - для получения характеристик устройства (экрана)
         FontRenderContext context = canvas.getFontRenderContext();
-    // Определить, должна ли быть видна ось Y на графике
         if (minX<=0.0 && maxX>=0.0)
         {
             canvas.draw(new Line2D.Double(xyToPoint(0, maxY), xyToPoint(0, minY)));
-    // Стрелка оси Y
             GeneralPath arrow = new GeneralPath();
-    // Установить начальную точку ломаной точно на верхний конец оси Y
             Point2D.Double lineEnd = xyToPoint(0, maxY);
             arrow.moveTo(lineEnd.getX(), lineEnd.getY());
-    // Вести левый "скат" стрелки в точку с относительными координатами (5,20)
             arrow.lineTo(arrow.getCurrentPoint().getX()+5, arrow.getCurrentPoint().getY()+20);
-    // Вести нижнюю часть стрелки в точку с относительными координатами (-10, 0)
             arrow.lineTo(arrow.getCurrentPoint().getX()-10, arrow.getCurrentPoint().getY());
-    // Замкнуть треугольник стрелки
             arrow.closePath();
             canvas.draw(arrow); // Нарисовать стрелку
             canvas.fill(arrow); // Закрасить стрелку
-    // Нарисовать подпись к оси Y
-    // Определить, сколько места понадобится для надписи "y"
             Rectangle2D bounds = axisFont.getStringBounds("y", context);
             Point2D.Double labelPos = xyToPoint(0, maxY);
-    // Вывести надпись в точке с вычисленными координатами
             canvas.drawString("y", (float)labelPos.getX() + 10, (float)(labelPos.getY() - bounds.getY()));
         }
 
