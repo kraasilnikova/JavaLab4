@@ -189,7 +189,7 @@ public class GraphicsDisplay extends JPanel
                 canvas.setColor(Color.BLUE);
             else
                 canvas.setColor(Color.BLACK);
-
+            int a=0;
             GeneralPath path = new GeneralPath();
             Point2D.Double center = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
             path.moveTo(center.x, center.y + 5);
@@ -200,11 +200,19 @@ public class GraphicsDisplay extends JPanel
             canvas.draw(path);
             if (flag == false)
             {
+                DecimalFormat tempX = new DecimalFormat("##.##");
+                DecimalFormat tempY = new DecimalFormat("##.##");
                 FontRenderContext context = canvas.getFontRenderContext();
                 Rectangle2D bounds = axisFont.getStringBounds("Экстремум", context);
                 Point2D.Double labelPos = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
                 canvas.drawString("Экстремум", (float) labelPos.getX() + 5, (float) (labelPos.getY() - bounds.getY()));
-                canvas.drawString("("+graphicsData[i][0]+"; "+graphicsData[i][1]+")", (float) labelPos.getX() + 5, (float) (labelPos.getY() - bounds.getY()) - 20);
+                canvas.drawString("("+tempX.format(graphicsData[i][0])+"; "+ tempY.format(graphicsData[i][1])+")", (float) labelPos.getX() + 5, (float) (labelPos.getY() - bounds.getY()) - 20);
+
+            }
+            if (graphicsData[i][0] == 0)
+            {
+                Point2D.Double labelPos = xyToPoint(graphicsData[i][0], graphicsData[i][1]);
+                canvas.drawString("(0; 0)", (float) labelPos.getX(), (float) labelPos.getY() - 20);
             }
         }
     }
@@ -216,6 +224,7 @@ public class GraphicsDisplay extends JPanel
         canvas.setColor(Color.BLACK);
         canvas.setPaint(Color.BLACK);
         canvas.setFont(axisFont);
+
     // Создать объект контекста отображения текста - для получения характеристик устройства (экрана)
         FontRenderContext context = canvas.getFontRenderContext();
         if (minX<=0.0 && maxX>=0.0)
